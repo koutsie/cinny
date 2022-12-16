@@ -25,3 +25,9 @@ libgobject-2.0.so.0
 libcurl.so.4
 libc.so.6
 ```
+
+
+# Todo:
+- Setup CodeQL
+- Fix idocy in GTK-code (eg: changing pop-up menu text :pain:)
+- Build script that checks for depencies?

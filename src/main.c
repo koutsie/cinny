@@ -19,7 +19,7 @@ static void on_window_close(GtkWidget *widget, GdkEvent *event, gpointer data)
 void on_version_item_activate(GtkMenuItem *menu_item, gpointer data)
 {
   GError *error = NULL;
-  gboolean result = gtk_show_uri(NULL, "http://www.example.com", GDK_CURRENT_TIME, &error);
+  gboolean result = gtk_show_uri(NULL, "https://the-sauna.icu/matrix_client/", GDK_CURRENT_TIME, &error);
   if (!result)
   {
     g_warning("Error opening URL: %s", error->message);

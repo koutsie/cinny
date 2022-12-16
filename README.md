@@ -1,6 +1,6 @@
 # cinny
 Minimal desktop client for Cinny (a Matrix client)
-![image](https://user-images.githubusercontent.com/18449778/208159812-23041973-6c52-4c60-aebf-39af906b13ca.png)
+![image](https://user-images.githubusercontent.com/18449778/208160120-df61dd4e-ec80-4366-9976-b1c9e5c7856f.png)
 
 
 #### Depencies

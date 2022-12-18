@@ -9,7 +9,7 @@
 static GtkStatusIcon *tray_icon;
 static GtkWidget *window;
 
-char localver[] = "0.02"; // Our version.
+char localver[] = "0.03"; // Our version.
 
 static void on_window_close(GtkWidget *widget, GdkEvent *event, gpointer data)
 {

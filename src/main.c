@@ -124,8 +124,8 @@ int main(int argc, char *argv[])
   window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   gtk_window_set_title(GTK_WINDOW(window), "Cinny");
   gtk_window_set_icon(GTK_WINDOW(window), gdk_pixbuf_new_from_inline(-1, cinny, FALSE, NULL));
-  gtk_window_set_default_size(GTK_WINDOW(window), 800, 450);
-  gtk_window_maximize(GTK_WINDOW(window));
+  gtk_window_set_default_size(GTK_WINDOW(window), 800, 450); // Jarvis,
+  gtk_widget_set_size_request(GTK_WIDGET(window), 800, 450); // make me immutable.
   g_signal_connect(window, "delete-event", G_CALLBACK(on_window_close), NULL);
 
   WebKitWebView *web_view = WEBKIT_WEB_VIEW(webkit_web_view_new());

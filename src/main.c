@@ -4,7 +4,7 @@
 #include <webkit2/webkit2.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
-#include "cinny.c" // our icon
+#include "cunny.c" // our icon
 
 static GtkStatusIcon *tray_icon;
 static GtkWidget *window;
@@ -122,14 +122,14 @@ int main(int argc, char *argv[])
   gtk_init(&argc, &argv);
 
   window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-  gtk_window_set_title(GTK_WINDOW(window), "Cinny");
-  gtk_window_set_icon(GTK_WINDOW(window), gdk_pixbuf_new_from_inline(-1, cinny, FALSE, NULL));
+  gtk_window_set_title(GTK_WINDOW(window), "Cunny");
+  gtk_window_set_icon(GTK_WINDOW(window), gdk_pixbuf_new_from_inline(-1, cunny, FALSE, NULL));
   gtk_window_set_default_size(GTK_WINDOW(window), 800, 450); // Jarvis,
   gtk_widget_set_size_request(GTK_WIDGET(window), 800, 450); // make me immutable.
   g_signal_connect(window, "delete-event", G_CALLBACK(on_window_close), NULL);
 
   WebKitWebView *web_view = WEBKIT_WEB_VIEW(webkit_web_view_new());
-  webkit_web_view_load_uri(web_view, "https://cinny.the-sauna.icu");
+  webkit_web_view_load_uri(web_view, "https://cunny.the-sauna.icu");
 
   GtkWidget *scrolled_window = gtk_scrolled_window_new(NULL, NULL);
   gtk_container_add(GTK_CONTAINER(scrolled_window), GTK_WIDGET(web_view));
@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
   gtk_container_add(GTK_CONTAINER(window), scrolled_window);
   gtk_widget_show_all(GTK_WIDGET(window));
 
-  tray_icon = gtk_status_icon_new_from_pixbuf(gdk_pixbuf_new_from_inline(-1, cinny, FALSE, NULL));
+  tray_icon = gtk_status_icon_new_from_pixbuf(gdk_pixbuf_new_from_inline(-1, cunny, FALSE, NULL));
   g_signal_connect(tray_icon, "activate", G_CALLBACK(on_tray_icon_activate), NULL);
   g_signal_connect(tray_icon, "popup-menu", G_CALLBACK(on_tray_icon_popup_menu), NULL);
 

@@ -1,4 +1,4 @@
-# Makefile for Cinny Desktop
+# Makefile for Cunny Desktop
 # If pkg-config is not available, use for example the below:
 #GTK_CFLAGS := -I/usr/include/gtk-3.0 -I/usr/include/webkit2gtk-4.0
 #GTK_LIBS := -lgtk-3 -lwebkit2gtk-4.0
@@ -8,7 +8,7 @@ CFLAGS := -Wno-format -Wno-unused-result -Wall -Wextra -O0 -g3
 
 GTK_CFLAGS := $(shell pkg-config --cflags gtk+-3.0 webkit2gtk-4.0)
 GTK_LIBS := $(shell pkg-config --libs gtk+-3.0 webkit2gtk-4.0)
-TARGET := cinny
+TARGET := cunny
 SOURCES := main.c
 OBJECTS := $(SOURCES:.c=.o)
 
@@ -26,4 +26,4 @@ clean:
 
 .PHONY: install
 install:
-	sudo cp cinny /usr/local/bin
+	sudo cp cunny /usr/local/bin

@@ -1,5 +1,5 @@
-# cinny
-Minimal desktop client for Cinny (a Matrix client)
+# cunny
+Minimal desktop client for Cunny (a Matrix client)
 
 [Homepage](the-sauna.icu/matrix_client/) | [Matrix](https://matrix.to/#/!BGCZgNSxrBCmEjuspT:kescher.at?via=kescher.at)
 

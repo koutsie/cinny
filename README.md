@@ -1,12 +1,13 @@
 # cinny
 Minimal desktop client for Cinny (a Matrix client)
+Because FUCK React/Node.
 
-[Homepage](the-sauna.icu/matrix_client/) | [Matrix](https://matrix.to/#/!BGCZgNSxrBCmEjuspT:kescher.at?via=kescher.at)
+[Homepage+Rant](the-sauna.icu/matrix_client/) | [Matrix](https://matrix.to/#/!BGCZgNSxrBCmEjuspT:kescher.at?via=kescher.at)
 
 ![image](https://user-images.githubusercontent.com/18449778/208160120-df61dd4e-ec80-4366-9976-b1c9e5c7856f.png)
 
 
-#### Depencies
+#### Depencies~
 ```
 libwebkit2gtk-4.0.so.37
 libgtk-3.so.0
@@ -30,7 +31,7 @@ libc.so.6
 ```
 
 
-# Todo:
-- Setup CodeQL
-- Fix idocy in GTK-code (eg: changing pop-up menu text :pain:)
-- Build script that checks for depencies?
+# Todo(depricated): 
+- ~Setup CodeQL~ idk if there is an alternative for sourcehut - i guess CI will suffice?
+- ~Fix idocy in GTK-code (eg: changing pop-up menu text :pain:)~ - i think i fucking did it??
+- ~Build script that checks for depencies?~ - theoretically we could just not.

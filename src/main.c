@@ -84,6 +84,20 @@ static void on_permission_request(WebKitWebView *web_view, WebKitPermissionReque
   }
 }
 
+static gboolean show_notification_callback(WebKitWebView *web_view, WebKitNotification *notification, gpointer user_data)
+{
+  const gchar *title = webkit_notification_get_title(notification);
+  const gchar *body = webkit_notification_get_body(notification);
+
+  // I know this is horrible.
+  hlog("lfw", "Title: %s - Body: %s\n", title, body);
+  gchar *cmd = g_strdup_printf("notify-send \"%s\" \"%s\"", title, body);
+  system(cmd);
+  g_free(cmd);
+
+  return TRUE;
+}
+
 static void on_window_close(GtkWidget *widget, GdkEvent *event, gpointer data)
 {
   GtkWidget *window = GTK_WIDGET(data);
@@ -322,6 +336,7 @@ int main(int argc, char *argv[])
   g_signal_connect(tray_icon, "popup-menu", G_CALLBACK(on_tray_icon_popup_menu), NULL);
   g_signal_connect(window, "key-press-event", G_CALLBACK(on_key_press), NULL);
   g_signal_connect(web_view, "permission-request", G_CALLBACK(on_permission_request), NULL);
+  g_signal_connect(web_view, "show-notification", G_CALLBACK(show_notification_callback), NULL);
 
   // Check updates, set off a fire in GTK & return 0 if everything went to hell!
   check_update();

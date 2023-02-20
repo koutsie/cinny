@@ -84,14 +84,38 @@ static void on_permission_request(WebKitWebView *web_view, WebKitPermissionReque
   }
 }
 
+// Thanks stackoverflow - this is horrible, if anyone has a better method
+// Please, I beg you - do make a pull request!
+void sanitize_string(char *str)
+{
+  size_t i, j;
+  for (i = 0, j = 0; str[i]; i++)
+  {
+    if (strcspn(&str[i], "'\"\\;&$()|<>`\t\n\r") == 0)
+    {
+      continue;
+    }
+    str[j++] = str[i];
+    if (strspn(&str[i], "'\"\\;&$()|<>`\t\n\r"))
+    {
+      i += strspn(&str[i], "'\"\\;&$()|<>`\t\n\r") - 1;
+    }
+  }
+  str[j] = '\0';
+}
+
 static gboolean show_notification_callback(WebKitWebView *web_view, WebKitNotification *notification, gpointer user_data)
 {
   const gchar *title = webkit_notification_get_title(notification);
   const gchar *body = webkit_notification_get_body(notification);
 
   // I know this is horrible.
+  sanitize_string(title);
+  sanitize_string(body);
+
   hlog("lfw", "Title: %s - Body: %s\n", title, body);
   gchar *cmd = g_strdup_printf("notify-send \"%s\" \"%s\"", title, body);
+
   system(cmd);
   g_free(cmd);
 

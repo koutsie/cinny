@@ -271,26 +271,32 @@ int main(int argc, char *argv[])
 
   // Various webkit options, and a pretty dumb way to check they're set:
   WebKitSettings *settings = webkit_settings_new();
-  g_object_set(settings, "enable-smooth-scrolling", TRUE,
+  g_object_set(settings,
+               "enable-page-cache", TRUE,
+               "enable-encrypted-media", TRUE,
+               "enable-smooth-scrolling", TRUE,
                "enable-developer-extras", FALSE,
                "enable-accelerated-2d-canvas", TRUE,
                "javascript-can-access-clipboard", TRUE,
                "enable-offline-web-application-cache", TRUE,
                "enable-write-console-messages-to-stdout", FALSE,
                NULL);
-  const char *properties[] = {"enable-smooth-scrolling",
-                              "enable-developer-extras",
-                              "enable-accelerated-2d-canvas",
-                              "javascript-can-access-clipboard",
-                              "enable-offline-web-application-cache",
-                              "enable-write-console-messages-to-stdout"};
+  const char *properties[] = {
+      "enable-encrypted-media",
+      "enable-page-cache",
+      "enable-smooth-scrolling",
+      "enable-developer-extras",
+      "enable-accelerated-2d-canvas",
+      "javascript-can-access-clipboard",
+      "enable-offline-web-application-cache",
+      "enable-write-console-messages-to-stdout"};
   const int num_properties = sizeof(properties) / sizeof(properties[0]);
 
   for (int i = 0; i < num_properties; i++)
   {
     gboolean value = FALSE;
     g_object_get(settings, properties[i], &value, NULL);
-    hlog("lfw", "Option %s: %s\n", properties[i], value ? "TRUE" : "FALSE");
+    hlog("lfw", "%s: %s\n", properties[i], value ? "TRUE" : "FALSE");
   }
 
   // Use the settings object to configure a WebKitWebView...

@@ -26,7 +26,16 @@
 static GtkStatusIcon *tray_icon;
 static GtkWidget *window;
 
-char localver[20] = "0.04"; // Current version, update this while building!
+char localver[20] = "0.05"; // Current version, update this while building!
+
+// Initial desktop notification crap
+void set_notification_permissions(WebKitWebContext *context)
+{
+  WebKitSecurityOrigin *origin = webkit_security_origin_new("https", "cinny.the-sauna.icu", 443);
+  GList *allowed_origins = g_list_append(NULL, origin);
+  webkit_web_context_initialize_notification_permissions(context, allowed_origins, NULL);
+  g_list_free(allowed_origins);
+}
 
 static void on_window_close(GtkWidget *widget, GdkEvent *event, gpointer data)
 {
@@ -43,6 +52,24 @@ void on_version_item_activate(GtkMenuItem *menu_item, gpointer data)
     g_warning("Error opening URL: %s", error->message);
     g_error_free(error);
   }
+}
+
+// I KNOW HORRIBLE - fix coming soon.
+void pc(const char *format, ...)
+{
+  printf("\033[38;5;214m[Cinny]\033[0m ");
+  va_list args;
+  va_start(args, format);
+  vprintf(format, args);
+  va_end(args);
+}
+void wp(const char *format, ...)
+{
+  printf("\033[38;5;45m[WebKit]\033[0m ");
+  va_list args;
+  va_start(args, format);
+  vprintf(format, args);
+  va_end(args);
 }
 
 static void on_tray_icon_activate(GtkStatusIcon *icon, gpointer data)
@@ -109,12 +136,12 @@ size_t write_data(void *ptr, size_t size, size_t nmemb, void *userdata)
   memcpy(response, data, total_size);
   response[total_size] = '\0';
 
-  printf("Server side version: %s\n", response);
-  printf("Local version: %s\n", localver);
+  pc("Server side version: %s\n", response);
+  pc("Local version: %s\n", localver);
 
   if (strcmp(response, localver) == 0)
   {
-    printf("No need to update.\n");
+    pc("No need to update.\n");
   }
   else
   {
@@ -183,13 +210,45 @@ int main(int argc, char *argv[])
   gtk_widget_set_size_request(GTK_WIDGET(window), 800, 450);
   g_signal_connect(window, "delete-event", G_CALLBACK(on_window_close), window);
 
-  WebKitWebView *web_view = WEBKIT_WEB_VIEW(webkit_web_view_new());
+  WebKitWebContext *context = webkit_web_context_new();
+  WebKitWebView *web_view = WEBKIT_WEB_VIEW(webkit_web_view_new_with_context(context));
   if (!web_view)
   {
     fprintf(stderr, "WebKit view creation failed!\n");
     return 1;
   }
-  webkit_web_view_load_uri(web_view, "https://cinny.the-sauna.icu");
+
+  // Various webkit options, and a pretty dump way to check they're set:
+  WebKitSettings *settings = webkit_settings_new();
+  g_object_set(settings, "enable-smooth-scrolling", TRUE,
+               "enable-developer-extras", FALSE,
+               "enable-accelerated-2d-canvas", TRUE,
+               "javascript-can-access-clipboard", TRUE,
+               "enable-offline-web-application-cache", TRUE,
+               "enable-write-console-messages-to-stdout", FALSE,
+               NULL);
+  const char *properties[] = {"enable-smooth-scrolling",
+                              "enable-developer-extras",
+                              "enable-accelerated-2d-canvas",
+                              "javascript-can-access-clipboard",
+                              "enable-offline-web-application-cache",
+                              "enable-write-console-messages-to-stdout"};
+  const int num_properties = sizeof(properties) / sizeof(properties[0]);
+
+  for (int i = 0; i < num_properties; i++)
+  {
+    gboolean value = FALSE;
+    g_object_get(settings, properties[i], &value, NULL);
+    wp("Option %s: %s\n", properties[i], value ? "TRUE" : "FALSE");
+  }
+
+  // Use the settings object to configure a WebKitWebView...
+  webkit_web_view_set_settings(web_view, settings);
+
+  // Other useless crap like desktop notifications:
+  set_notification_permissions(context);
+
+  webkit_web_view_load_uri(web_view, "https://cinny.the-sauna.icu/");
 
   GtkWidget *scrolled_window = gtk_scrolled_window_new(NULL, NULL);
   if (!scrolled_window)
@@ -209,5 +268,7 @@ int main(int argc, char *argv[])
   // Check updates, set off a fire in GTK & return 0 if everything went to hell!
   check_update();
   gtk_main();
+  // unnecessary
+  gtk_widget_destroy(window);
   return 0;
 }

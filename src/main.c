@@ -27,7 +27,7 @@
 static GtkStatusIcon *tray_icon;
 static GtkWidget *window;
 
-char localver[20] = "0.05"; // Current version, update this while building!
+char localver[20] = "0.06"; // Current version, update this while building!
 
 // Horrible logger
 void hlog(const char *type, const char *format, ...)
@@ -73,13 +73,15 @@ void hlog(const char *type, const char *format, ...)
   va_end(args);
 }
 
-// Initial desktop notification crap
-void set_notification_permissions(WebKitWebContext *context)
+// Notification (permissions) now work!
+static void on_permission_request(WebKitWebView *web_view, WebKitPermissionRequest *request, gpointer user_data)
 {
-  WebKitSecurityOrigin *origin = webkit_security_origin_new("https", "cinny.the-sauna.icu", 443);
-  GList *allowed_origins = g_list_append(NULL, origin);
-  webkit_web_context_initialize_notification_permissions(context, allowed_origins, NULL);
-  g_list_free(allowed_origins);
+  if (WEBKIT_IS_NOTIFICATION_PERMISSION_REQUEST(request))
+  {
+    hlog("lfc", "Notification permission request allowed.\n");
+    WebKitNotificationPermissionRequest *notification_request = WEBKIT_NOTIFICATION_PERMISSION_REQUEST(request);
+    webkit_permission_request_allow(WEBKIT_PERMISSION_REQUEST(notification_request));
+  }
 }
 
 static void on_window_close(GtkWidget *widget, GdkEvent *event, gpointer data)
@@ -302,9 +304,6 @@ int main(int argc, char *argv[])
   // Use the settings object to configure a WebKitWebView...
   webkit_web_view_set_settings(web_view, settings);
 
-  // Other useless crap like desktop notifications:
-  set_notification_permissions(context);
-
   webkit_web_view_load_uri(web_view, "https://cinny.the-sauna.icu/");
 
   GtkWidget *scrolled_window = gtk_scrolled_window_new(NULL, NULL);
@@ -322,6 +321,7 @@ int main(int argc, char *argv[])
   g_signal_connect(tray_icon, "activate", G_CALLBACK(on_tray_icon_activate), NULL);
   g_signal_connect(tray_icon, "popup-menu", G_CALLBACK(on_tray_icon_popup_menu), NULL);
   g_signal_connect(window, "key-press-event", G_CALLBACK(on_key_press), NULL);
+  g_signal_connect(web_view, "permission-request", G_CALLBACK(on_permission_request), NULL);
 
   // Check updates, set off a fire in GTK & return 0 if everything went to hell!
   check_update();

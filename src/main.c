@@ -11,6 +11,7 @@
 #include <string.h>
 #include <gtk/gtk.h>
 #include <curl/curl.h>
+#include <sys/resource.h>
 #include <webkit2/webkit2.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
@@ -27,6 +28,50 @@ static GtkStatusIcon *tray_icon;
 static GtkWidget *window;
 
 char localver[20] = "0.05"; // Current version, update this while building!
+
+// Horrible logger
+void hlog(const char *type, const char *format, ...)
+{
+  const char *prefix = "";
+  const char *colorCode = "";
+
+  switch (type[0])
+  {
+  case 'l':
+    if (strcmp(type, "lfc") == 0)
+    {
+      prefix = "[Cinny] ";
+      colorCode = "\033[38;5;214m";
+    }
+    else if (strcmp(type, "lfw") == 0)
+    {
+      prefix = "[WebKit] ";
+      colorCode = "\033[38;5;45m";
+    }
+    else if (strcmp(type, "lfg") == 0)
+    {
+      prefix = "[Success] ";
+      colorCode = "\033[38;5;76m";
+    }
+    else if (strcmp(type, "lfr") == 0)
+    {
+      prefix = "[Failure] ";
+      colorCode = "\033[38;5;160m";
+    }
+    break;
+  default:
+    prefix = "";
+    colorCode = "";
+    break;
+  }
+
+  printf("%s%s%s", colorCode, prefix, "\033[0m");
+
+  va_list args;
+  va_start(args, format);
+  vprintf(format, args);
+  va_end(args);
+}
 
 // Initial desktop notification crap
 void set_notification_permissions(WebKitWebContext *context)
@@ -45,31 +90,33 @@ static void on_window_close(GtkWidget *widget, GdkEvent *event, gpointer data)
 
 void on_version_item_activate(GtkMenuItem *menu_item, gpointer data)
 {
+  hlog("lfc", "Opening updates page... \n");
   GError *error = NULL;
   gboolean result = gtk_show_uri(NULL, "https://the-sauna.icu/matrix_client/", GDK_CURRENT_TIME, &error);
   if (!result)
   {
-    g_warning("Error opening URL: %s", error->message);
+    hlog("lfr", "Error opening URL: %s", error->message);
     g_error_free(error);
   }
 }
 
-// I KNOW HORRIBLE - fix coming soon.
-void pc(const char *format, ...)
+// most of these stats i got from stackoverflow, thansk peeps.
+void memusage()
 {
-  printf("\033[38;5;214m[Cinny]\033[0m ");
-  va_list args;
-  va_start(args, format);
-  vprintf(format, args);
-  va_end(args);
+  struct rusage r_usage;
+  getrusage(RUSAGE_SELF, &r_usage);
+  hlog("lfc", "Memory usage: %ld MB\n", r_usage.ru_maxrss / 1024);
 }
-void wp(const char *format, ...)
+
+static gboolean on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
 {
-  printf("\033[38;5;45m[WebKit]\033[0m ");
-  va_list args;
-  va_start(args, format);
-  vprintf(format, args);
-  va_end(args);
+  static gboolean memusage_pressed = FALSE;
+  if (event->keyval == GDK_KEY_F12 && !memusage_pressed)
+  {
+    memusage();
+    memusage_pressed = TRUE;
+  }
+  return FALSE;
 }
 
 static void on_tray_icon_activate(GtkStatusIcon *icon, gpointer data)
@@ -77,17 +124,20 @@ static void on_tray_icon_activate(GtkStatusIcon *icon, gpointer data)
   if (gtk_widget_get_visible(window))
   {
     gtk_widget_hide(window);
+    hlog("lfc", "Window iconified! \n");
   }
   else
   {
     gtk_widget_show(window);
     gtk_window_deiconify(GTK_WINDOW(window));
     gtk_window_present(GTK_WINDOW(window));
+    hlog("lfc", "Window deiconified! \n");
   }
 }
 
 static void on_tray_icon_popup_menu(GtkStatusIcon *icon, guint button, guint activate_time, gpointer data)
 {
+  hlog("lfc", "Popup menu action! \n");
   GtkWidget *menu = gtk_menu_new();
 
   // Create & add menu items to the right click menu.
@@ -129,19 +179,19 @@ size_t write_data(void *ptr, size_t size, size_t nmemb, void *userdata)
   char *response = (char *)malloc(total_size + 1);
   if (response == NULL)
   {
-    fprintf(stderr, "alloc memory failed in write_data() !\n");
+    hlog("lfr", "alloc memory failed in write_data() !\n");
     return 0;
   }
 
   memcpy(response, data, total_size);
   response[total_size] = '\0';
 
-  pc("Server side version: %s\n", response);
-  pc("Local version: %s\n", localver);
+  hlog("lfc", "Server side version: %s\n", response);
+  hlog("lfc", "Local version: %s\n", localver);
 
   if (strcmp(response, localver) == 0)
   {
-    pc("No need to update.\n");
+    hlog("lfc", "No need to update.\n");
   }
   else
   {
@@ -157,6 +207,7 @@ size_t write_data(void *ptr, size_t size, size_t nmemb, void *userdata)
 
 int check_update()
 {
+  hlog("lfc", "Checking for updates...\n");
   CURL *curl;
   CURLcode res;
 
@@ -171,7 +222,7 @@ int check_update()
     res = curl_easy_perform(curl);
     if (res != CURLE_OK)
     {
-      fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+      hlog("lfr", "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
       curl_easy_cleanup(curl);
       curl_global_cleanup();
       return -1;
@@ -181,7 +232,7 @@ int check_update()
   }
   else
   {
-    fprintf(stderr, "curl_easy_init() failed\n");
+    hlog("lfr", "curl_easy_init() failed\n");
     curl_global_cleanup();
     return -1;
   }
@@ -194,14 +245,14 @@ int main(int argc, char *argv[])
 {
   if (!gtk_init_check(&argc, &argv))
   {
-    fprintf(stderr, "GTK Initialization failed!?\n");
+    hlog("lfr", "GTK Initialization failed!?\n");
     return 1;
   }
 
   window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   if (!window)
   {
-    fprintf(stderr, "Window creation failed...?\n");
+    hlog("lfr", "Window creation failed...?\n");
     return 1;
   }
   gtk_window_set_title(GTK_WINDOW(window), "Cinny");
@@ -214,11 +265,11 @@ int main(int argc, char *argv[])
   WebKitWebView *web_view = WEBKIT_WEB_VIEW(webkit_web_view_new_with_context(context));
   if (!web_view)
   {
-    fprintf(stderr, "WebKit view creation failed!\n");
+    hlog("lfr", "WebKit view creation failed!\n");
     return 1;
   }
 
-  // Various webkit options, and a pretty dump way to check they're set:
+  // Various webkit options, and a pretty dumb way to check they're set:
   WebKitSettings *settings = webkit_settings_new();
   g_object_set(settings, "enable-smooth-scrolling", TRUE,
                "enable-developer-extras", FALSE,
@@ -239,7 +290,7 @@ int main(int argc, char *argv[])
   {
     gboolean value = FALSE;
     g_object_get(settings, properties[i], &value, NULL);
-    wp("Option %s: %s\n", properties[i], value ? "TRUE" : "FALSE");
+    hlog("lfw", "Option %s: %s\n", properties[i], value ? "TRUE" : "FALSE");
   }
 
   // Use the settings object to configure a WebKitWebView...
@@ -253,7 +304,7 @@ int main(int argc, char *argv[])
   GtkWidget *scrolled_window = gtk_scrolled_window_new(NULL, NULL);
   if (!scrolled_window)
   {
-    fprintf(stderr, "Scrollwindow creation failed!??\n");
+    hlog("lfg", "Scrollwindow creation failed!??\n");
     return 1;
   }
   gtk_container_add(GTK_CONTAINER(scrolled_window), GTK_WIDGET(web_view));
@@ -264,9 +315,11 @@ int main(int argc, char *argv[])
   tray_icon = gtk_status_icon_new_from_pixbuf(gdk_pixbuf_new_from_inline(-1, cinny, FALSE, NULL));
   g_signal_connect(tray_icon, "activate", G_CALLBACK(on_tray_icon_activate), NULL);
   g_signal_connect(tray_icon, "popup-menu", G_CALLBACK(on_tray_icon_popup_menu), NULL);
+  g_signal_connect(window, "key-press-event", G_CALLBACK(on_key_press), NULL);
 
   // Check updates, set off a fire in GTK & return 0 if everything went to hell!
   check_update();
+  hlog("lfg", "gkt_main() - we're up and running!\n");
   gtk_main();
   // unnecessary
   gtk_widget_destroy(window);

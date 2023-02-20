@@ -124,14 +124,27 @@ void memusage()
   hlog("lfc", "Memory usage: %ld MB\n", r_usage.ru_maxrss / 1024);
 }
 
+// Here's a much better way to handle this lmao
+// You really shouldn't be coding sleep deprived ☠️
+
+static gboolean reset_memusage_pressed(gpointer data)
+{
+  gboolean *memusage_pressed = (gboolean *)data;
+  *memusage_pressed = FALSE;
+  return G_SOURCE_REMOVE;
+}
+
 static gboolean on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
 {
   static gboolean memusage_pressed = FALSE;
+
   if (event->keyval == GDK_KEY_F12 && !memusage_pressed)
   {
     memusage();
     memusage_pressed = TRUE;
+    g_timeout_add(100, (GSourceFunc)reset_memusage_pressed, &memusage_pressed);
   }
+
   return FALSE;
 }
 
